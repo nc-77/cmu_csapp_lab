@@ -144,7 +144,7 @@ NOTES:
  */
 int bitXor(int x, int y) {
   
-  return 2;
+  return (~(x&y)&(~(~x&~y)));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -153,8 +153,8 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-
-  return 2;
+  
+  return (1<<31);
 
 }
 //2
@@ -166,7 +166,9 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+  int t=x+1;
+  int y=~x;
+  return (!(y^t))&(!!(~x));
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -177,7 +179,9 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  int mask=0xAA+(0xAA<<8);
+  mask=mask+(mask<<16);
+  return !((x&mask)^mask);
 }
 /* 
  * negate - return -x 
@@ -187,7 +191,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x+1;
 }
 //3
 /* 
@@ -200,7 +204,12 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  int Tmax=~(1<<31);
+  int upper=~0x39&Tmax;
+  int uppernum=(upper+x)>>31; 
+  int lower=~0x30&Tmax;
+  int lowernum=(lower+x+1)>>31;
+  return (!uppernum)&lowernum;
 }
 /* 
  * conditional - same as x ? y : z 
@@ -210,7 +219,9 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  x=!!x; //if(x) x=0x1 else x=0
+  x=~x+1;//if(x) x=111111... else x=0
+  return (y&x)|(z&(~x));
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -220,7 +231,11 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  int xLeft=x>>31;
+  int yLeft=y>>31;
+  int negx=(~x)+1;
+  int sub=(y+negx)>>31; // y-x 符号位
+  return ((!(xLeft^yLeft))&(!sub))|(((xLeft^yLeft))&(!yLeft));
 }
 //4
 /* 
@@ -231,8 +246,8 @@ int isLessOrEqual(int x, int y) {
  *   Max ops: 12
  *   Rating: 4 
  */
-int logicalNeg(int x) {
-  return 2;
+int logicalNeg(int x) {  
+  return ~((x|((~x)+1))>>31)&1;// 利用只有0和-1的相反数补码是其本身
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -247,7 +262,21 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+  int b_16,b_8,b_4,b_2,b_1,b_0;
+  int sign=x>>31;
+  x=(sign&~x)|(~sign&x);//正数不变，负数取反，找最高位为1的
+  b_16=!!(x>>16)<<4; //判断前16位中是否有1
+  x=x>>b_16;//根据前16位是否有1选择缩小范围
+  b_8=!!(x>>8)<<3;
+  x=x>>b_8;
+  b_4=!!(x>>4)<<2;
+  x=x>>b_4;
+  b_2=!!(x>>2)<<1;
+  x=x>>b_2;
+  b_1=!!(x>>1)<<0;
+  x=x>>b_1;
+  b_0=x;
+  return b_16+b_8+b_4+b_2+b_1+b_0+1;
 }
 //float
 /* 
@@ -260,8 +289,10 @@ int howManyBits(int x) {
  *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
  *   Max ops: 30
  *   Rating: 4
+ * 
  */
 unsigned floatScale2(unsigned uf) {
+  
   return 2;
 }
 /* 
