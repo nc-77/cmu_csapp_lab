@@ -292,6 +292,8 @@ int howManyBits(int x) {
  * 
  */
 unsigned floatScale2(unsigned uf) {
+  int sign=uf>>31;
+  int exp=(uf>>23)&0xff;
   
   return 2;
 }
