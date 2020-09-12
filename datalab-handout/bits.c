@@ -292,10 +292,12 @@ int howManyBits(int x) {
  * 
  */
 unsigned floatScale2(unsigned uf) {
-  int sign=uf>>31;
+  int sign=((uf>>31)&1)<<31;
   int exp=(uf>>23)&0xff;
-  
-  return 2;
+  if(!exp) return (uf<<1)|sign;
+  if(exp==255) return uf;
+  if(++exp==255) return 0x7f800000|sign;
+  return (exp<<23)|(uf&0x807fffff);
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -310,7 +312,19 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  int sign=uf>>31;
+  int exp=(uf>>23)&0xff;
+  int frac=uf&0x007fffff;
+  int abs;
+  if(!exp) return 0;
+  if(exp==255) return 0x80000000u;
+  exp-=127;
+  if(exp>31) return 0x80000000u;//超出int
+  if(exp<0) return 0;
+  frac=frac|0x800000;
+  abs=frac>>(23-exp); //取整数部分
+  if(!sign) return abs;//判断正负
+  else return ~abs+1;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -326,5 +340,8 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    x+=127;
+    if(x>=255) return 0x7f800000;
+    else if(x<=0) return 0;
+    return x<<23;
 }
