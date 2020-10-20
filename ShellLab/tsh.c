@@ -343,6 +343,7 @@ void sigint_handler(int sig)
     if(pid){
         kill(-pid,SIGINT);
     }
+    
     errno=olderrno;
     return;
 }
