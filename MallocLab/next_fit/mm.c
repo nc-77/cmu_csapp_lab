@@ -165,6 +165,8 @@ void *mm_realloc(void *ptr, size_t size)
     return newptr;
 }
 
+
+
 static void *extend_heap(size_t words)
 {
     char *bp;
@@ -182,7 +184,7 @@ static void *extend_heap(size_t words)
 
 static void *coalesce(void *bp)
 {
-    size_t prev_alloc=GET_ALLOC(HEAD(PREV_BLKP(bp)));
+    size_t prev_alloc=GET_ALLOC(FOOT(PREV_BLKP(bp)));
     size_t next_alloc=GET_ALLOC(HEAD(NEXT_BLKP(bp)));
     size_t size=GET_SIZE(HEAD(bp));
     if(prev_alloc&&next_alloc){ /* 前后都无空闲块 */
@@ -196,13 +198,13 @@ static void *coalesce(void *bp)
         PUT(FOOT(bp),PACK(size,0));
     } 
     else if(!prev_alloc&&next_alloc){  /* 仅前面有空闲块 */
-        size+=GET_SIZE(HEAD(PREV_BLKP(bp)));
+        size+=GET_SIZE(FOOT(PREV_BLKP(bp)));
         PUT(FOOT(bp),PACK(size,0));
         PUT(HEAD(PREV_BLKP(bp)),PACK(size,0));
         bp=PREV_BLKP(bp);
     }
     else{   /* 前后都有空闲块 */
-        size+=(GET_SIZE(HEAD(NEXT_BLKP(bp)))+GET_SIZE(HEAD(PREV_BLKP(bp))));
+        size+=(GET_SIZE(HEAD(NEXT_BLKP(bp)))+GET_SIZE(FOOT(PREV_BLKP(bp))));
         PUT(HEAD(PREV_BLKP(bp)),PACK(size,0));
         PUT(FOOT(NEXT_BLKP(bp)),PACK(size,0));
         bp=PREV_BLKP(bp);
@@ -246,9 +248,6 @@ static void split_block(void *bp,size_t size){
         PUT(FOOT(bp),PACK(remain_size,0));
     }
 }
-
-
-
 
 
 
